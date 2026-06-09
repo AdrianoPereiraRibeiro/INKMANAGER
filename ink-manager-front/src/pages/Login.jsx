@@ -160,6 +160,26 @@ export default function Login() {
           <LogIn size={18} /> 
           {loading ? '...' : t('button_login')}
         </button>
+
+        {/* LINK / BOTAO PARA TELA DE CADASTRO */}
+        <div style={{ textTransform: 'none', textAlign: 'center', marginTop: '10px', fontSize: '14px', color: '#aaa' }}>
+          Não tem uma conta?{' '}
+          <span 
+            onClick={() => navigate('/register')} 
+            style={{ 
+              color: '#8b5cf6', 
+              cursor: 'pointer', 
+              fontWeight: 'bold',
+              textDecoration: 'underline',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#a78bfa'}
+            onMouseLeave={(e) => e.target.style.color = '#8b5cf6'}
+          >
+            {t('button_register')}
+          </span>
+        </div>
+
       </form>
     </div>
   );

@@ -10,13 +10,15 @@ import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 
 // Importa as telas públicas e do cliente totalmente prontas
 import Login from './pages/Login';
+import Register from './pages/Register'; 
 import Catalog from './pages/client/Catalog';
 import AppointmentForm from './pages/client/AppointmentForm';
 import MyAppointments from './pages/client/MyAppointments';
+import ClientProfile from './pages/client/Profile'; 
 
 // Importa as telas do tatuador totalmente prontas
 import ArtistDashboard from './pages/artist/Dashboard';
-import ArtistSchedule from './pages/artist/Schedule';
+import ArtistProfile from './pages/artist/ArtistProfile'; // Mantido apenas o Perfil e o Dashboard integrado
 
 // Guarda de Rotas para proteger o sistema contra acessos indevidos (Segurança do app)
 function ProtectedRoute({ children, allowedRole }) {
@@ -37,13 +39,14 @@ function ProtectedRoute({ children, allowedRole }) {
 function AppContent() {
   const { userRole } = useAuth();
 
-  // Agora sim! O hook roda com o contexto do Router perfeitamente carregado na memória
+  // O hook roda com o contexto do Router perfeitamente carregado na memória
   useKeyboardShortcuts();
 
   return (
     <Routes>
-      {/* Rota Pública */}
+      {/* Rotas Públicas */}
       <Route path="/login" element={!userRole ? <Login /> : <Navigate to={userRole === 'Artist' ? '/artist/dashboard' : '/client/catalog'} replace />} />
+      <Route path="/register" element={!userRole ? <Register /> : <Navigate to={userRole === 'Artist' ? '/artist/dashboard' : '/client/catalog'} replace />} />
 
       {/* Rotas Privadas do CLIENTE */}
       <Route path="/client/catalog" element={
@@ -61,6 +64,11 @@ function AppContent() {
           <MyAppointments />
         </ProtectedRoute>
       } />
+      <Route path="/client/profile" element={
+        <ProtectedRoute allowedRole="Client">
+          <ClientProfile />
+        </ProtectedRoute>
+      } />
 
       {/* Rotas Privadas do TATUADOR */}
       <Route path="/artist/dashboard" element={
@@ -68,9 +76,9 @@ function AppContent() {
           <ArtistDashboard />
         </ProtectedRoute>
       } />
-      <Route path="/artist/schedule" element={
+      <Route path="/artist/profile" element={
         <ProtectedRoute allowedRole="Artist">
-          <ArtistSchedule />
+          <ArtistProfile />
         </ProtectedRoute>
       } />
 

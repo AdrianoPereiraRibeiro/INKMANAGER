@@ -1,160 +1,149 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock, FileText, ArrowLeft, Keyboard } from 'lucide-react';
-import api from '../../services/api';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft, Calendar, Clock, FileText, Ruler, Scissors, PersonStanding, Send } from 'lucide-react';
 
 export default function AppointmentForm() {
   const { t } = useTranslation();
-  const { artistId } = useParams(); // Pega o ID do tatuador que veio pela URL da rota
+  const { artistId } = useParams();
   const navigate = useNavigate();
 
-  // Estados dos campos do formulário
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [description, setDescription] = useState('');
+  // Estado do formulário com os novos campos detalhados que o tatuador precisa
+  const [formData, setFormData] = useState({
+    date: '',
+    time: '',
+    style: 'Fine Line', // Valor padrão
+    sizeCm: '',
+    bodyPart: '',
+    description: ''
+  });
+
+  const [artistName, setArtistName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Nomes estáticos temporários baseados no ID escolhido para simular a tela
-  const artistName = artistId === '1' ? 'Thiago Silva' : artistId === '2' ? 'Marina Fontes' : 'Carlos "Old" Neto';
+  useEffect(() => {
+    // Simula a busca do nome do artista selecionado no catálogo
+    const artistsMock = {
+      1: 'Thiago Silva',
+      2: 'Marina Fontes',
+      3: 'Carlos "Old" Neto'
+    };
+    setArtistName(artistsMock[artistId] || 'Tatuador Selecionado');
+  }, [artistId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const appointmentData = {
-      artistId: parseInt(artistId),
-      date: date,
-      time: time,
-      description: description,
-      status: 'Pending' // Começa pendente para o tatuador aprovar
-    };
-
     try {
-      /* ======================================================================
-        INTEGRAÇÃO COM O C# (VALIDAÇÃO DO BANCO):
-        Quando o back-end estiver pronto, essa chamada vai bater na validação 
-        do seu dupla. Se o C# responder com erro de conflito de horário, 
-        cairá direto no catch.
-        
-        await api.post('/appointments', appointmentData);
-        ======================================================================
-      */
+      // PRONTO PARA O C# / SQL SERVER:
+      // Envia o payload completo com os detalhes da anatomia e tamanho
+      // await api.post('/appointments', { artistId, ...formData });
 
-      // Simulação de resposta bem-sucedida do servidor
       await new Promise(resolve => setTimeout(resolve, 800));
-      
-      alert('Solicitação enviada com sucesso! Aguarde a aprovação do tatuador.');
-      
-      // Envia o cliente para a tela de listagem de agendamentos dele
+      alert('Solicitação de agendamento enviada! O tatuador irá analisar o desenho e retornará com o preço.');
       navigate('/client/appointments');
-
     } catch (error) {
       console.error(error);
-      // Se o back-end em C# rejeitar por horário ocupado, você exibe o alerta:
-      alert('Este horário já está ocupado por outra sessão deste tatuador. Escolha outra data/hora.');
+      alert('Erro ao enviar solicitação. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#121212', color: '#fff', fontFamily: 'sans-serif', padding: '40px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#121212', color: '#fff', fontFamily: 'sans-serif', padding: '40px 20px' }}>
       
-      <div style={{ maxWidth: '500px', margin: '0 auto', width: '100%' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         
-        {/* PONTO 4: Botão de Voltar para o Catálogo coerente e internacionalizado */}
+        {/* Botão Voltar */}
         <button 
           onClick={() => navigate('/client/catalog')}
-          style={{ 
-            background: 'none', border: 'none', color: '#aaa', display: 'flex', 
-            alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '20px', padding: 0 
-          }}
+          style={{ background: 'none', border: 'none', color: '#aaa', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '20px', padding: 0, fontSize: '14px' }}
         >
-          <ArrowLeft size={18} /> {t('button_back') || 'Voltar'}
+          <ArrowLeft size={16} /> Voltar para o Catálogo
         </button>
 
-        {/* Cabeçalho */}
+        {/* Título da Tela */}
         <div style={{ marginBottom: '30px' }}>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '26px' }}>{t('form_title')}</h1>
-          <p style={{ margin: 0, color: '#aaa' }}>{t('form_subtitle')} <strong style={{ color: '#8b5cf6' }}>{artistName}</strong></p>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 'bold' }}>Solicitar Horário</h1>
+          <p style={{ margin: 0, color: '#aaa' }}>Você está enviando uma proposta de projeto para: <strong style={{ color: '#8b5cf6' }}>{artistName}</strong></p>
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} style={{ 
-          background: '#1e1e1e', padding: '30px', borderRadius: '8px', 
-          border: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '20px' 
-        }}>
+        <form onSubmit={handleSubmit} style={{ backgroundColor: '#1e1e1e', padding: '30px', borderRadius: '8px', border: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {/* Campo Data */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CalendarDays size={16} color="#8b5cf6" /> {t('form_date')}
-            </label>
-            <input 
-              type="date" 
-              value={date} 
-              onChange={e => setDate(e.target.value)} 
-              required 
-              style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#2a2a2a', color: '#fff', outline: 'none' }} 
-            />
+          {/* Data e Hora */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Calendar size={16} color="#8b5cf6" /> Data Pretendida
+              </label>
+              <input type="date" name="date" value={formData.date} onChange={handleChange} required style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={16} color="#8b5cf6" /> Horário
+              </label>
+              <input type="time" name="time" value={formData.time} onChange={handleChange} required style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+            </div>
           </div>
 
-          {/* Campo Horário */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={16} color="#8b5cf6" /> {t('form_time')}
-            </label>
-            <input 
-              type="time" 
-              value={time} 
-              onChange={e => setTime(e.target.value)} 
-              required 
-              style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#2a2a2a', color: '#fff', outline: 'none' }} 
-            />
+          <hr style={{ border: 'none', borderTop: '1px solid #333', margin: '5px 0' }} />
+
+          {/* NOVOS CAMPOS: Estilo e Tamanho */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Scissors size={16} color="#8b5cf6" /> Estilo Comercial
+              </label>
+              <select name="style" value={formData.style} onChange={handleChange} style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none', cursor: 'pointer' }}>
+                <option value="Fine Line">Fine Line</option>
+                <option value="Blackwork">Blackwork</option>
+                <option value="Realismo">Realismo</option>
+                <option value="Traditional / Old School">Traditional / Old School</option>
+                <option value="Geométrico">Geométrico</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Ruler size={16} color="#8b5cf6" /> Tamanho (ex: 15cm)
+              </label>
+              <input type="text" name="sizeCm" value={formData.sizeCm} onChange={handleChange} required placeholder="Ex: 15cm" style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+            </div>
           </div>
 
-          {/* Campo Descrição da Ideia */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {/* NOVO CAMPO: Local do Corpo */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FileText size={16} color="#8b5cf6" /> {t('form_description')}
+              <PersonStanding size={16} color="#8b5cf6" /> Local do Corpo para a Tatuagem
             </label>
-            <textarea 
-              value={description} 
-              onChange={e => setDescription(e.target.value)} 
-              required 
-              rows="4"
-              placeholder={t('form_placeholder')}
-              style={{ 
-                padding: '12px', borderRadius: '4px', border: '1px solid #333', 
-                background: '#2a2a2a', color: '#fff', outline: 'none', resize: 'vertical', fontFamily: 'sans-serif' 
-              }} 
-            />
+            <input type="text" name="bodyPart" value={formData.bodyPart} onChange={handleChange} required placeholder="Ex: Antebraço Esquerdo, Costelas, Panturrilha..." style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+          </div>
+
+          {/* NOVO CAMPO: Descrição da Ideia */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FileText size={16} color="#8b5cf6" /> Idéia / Descrição Detalhada do Desenho
+            </label>
+            <textarea name="description" value={formData.description} onChange={handleChange} required rows="4" placeholder="Explique os detalhes do que deseja tatuar (elementos, traço, referências)..." style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none', resize: 'vertical', fontFamily: 'sans-serif', lineHeight: '1.4' }} />
           </div>
 
           {/* Botão de Envio */}
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={{ 
-              padding: '14px', borderRadius: '4px', border: 'none', 
-              background: loading ? '#5b21b6' : '#8b5cf6', color: '#fff', 
-              fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop: '10px'
-            }}
-          >
-            {loading ? '...' : t('button_send_request')}
+          <button type="submit" disabled={loading} style={{ marginTop: '10px', padding: '14px', backgroundColor: '#8b5cf6', color: '#fff', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.2s' }}>
+            <Send size={18} /> {loading ? 'Enviando Proposta...' : 'Enviar Pedido para Avaliação'}
           </button>
 
         </form>
-      </div>
 
-      {/* PONTO 1: BARRA DE ACESSIBILIDADE VISUAL NO RODAPÉ */}
-      <div style={{ maxWidth: '500px', margin: '40px auto 0 auto', width: '100%', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: '#666', fontSize: '13px' }}>
-        <Keyboard size={16} color="#444" />
-        <span><strong>Atalhos:</strong> <kbd style={{ background: '#222', padding: '2px 5px', borderRadius: '4px', border: '1px solid #444', color: '#aaa' }}>Alt + C</kbd> Catálogo | <kbd style={{ background: '#222', padding: '2px 5px', borderRadius: '4px', border: '1px solid #444', color: '#aaa' }}>Alt + A</kbd> Agendamentos</span>
       </div>
-
     </div>
   );
 }

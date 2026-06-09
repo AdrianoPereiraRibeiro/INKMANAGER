@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Importa o contexto de autenticação
 
 export default function useKeyboardShortcuts() {
   const navigate = useNavigate();
+  const { userRole } = useAuth(); // Recupera o papel do usuário logado ('Client' ou 'Artist')
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -16,9 +18,9 @@ export default function useKeyboardShortcuts() {
             
             // 1. Limpa os dados de sessão do localStorage para deslogar de verdade
             localStorage.removeItem('userRole');
-            localStorage.removeItem('token'); // Remove o token caso seu app use para autenticação
+            localStorage.removeItem('token'); 
             
-            // 2. Dá o feedback visual para o usuário (Ponto 3 do checklist)
+            // 2. Dá o feedback visual para o usuário
             alert('Sessão encerrada com sucesso!');
             
             // 3. Força o redirecionamento limpando o estado de memória do React
@@ -40,9 +42,14 @@ export default function useKeyboardShortcuts() {
             navigate('/artist/dashboard');
             break;
 
-          case 's':
+          case 'p':
             event.preventDefault();
-            navigate('/artist/schedule');
+            // CORREÇÃO DINÂMICA: Redireciona com base no tipo de perfil logado
+            if (userRole === 'Artist') {
+              navigate('/artist/profile');
+            } else if (userRole === 'Client') {
+              navigate('/client/profile');
+            }
             break;
 
           default:
@@ -58,5 +65,5 @@ export default function useKeyboardShortcuts() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [navigate]);
+  }, [navigate, userRole]); // Adicionado userRole nas dependências do useEffect
 }
