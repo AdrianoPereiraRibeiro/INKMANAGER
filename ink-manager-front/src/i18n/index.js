@@ -14,8 +14,12 @@ i18n
   // Inicializa o motor de tradução
   .init({
     resources: {
-      pt: pt,
-      en: en
+      pt: {
+        translation: pt // Envelopa o JSON na chave 'translation' que o i18next busca por padrão
+      },
+      en: {
+        translation: en // Envelopa o JSON na chave 'translation' que o i18next busca por padrão
+      }
     },
     // Define o idioma padrão caso o navegador do usuário esteja em uma língua não mapeada (ex: Russo ou Francês)
     fallbackLng: 'pt',

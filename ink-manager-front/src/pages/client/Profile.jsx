@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Save, ArrowLeft, Keyboard } from 'lucide-react';
-import api from '../../services/api'; // Ajuste o caminho se necessário
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -44,13 +43,13 @@ export default function Profile() {
     if (profileData.password) {
       // 1. Obriga a digitação da senha atual
       if (!profileData.currentPassword) {
-        alert('Por favor, informe sua senha atual para poder criar uma nova.');
+        alert(t('profile.alert_current_password_required'));
         return;
       }
       
       // 2. Confere se a nova senha e a confirmação batem
       if (profileData.password !== profileData.confirmPassword) {
-        alert('A nova senha e a confirmação não coincidem! Por favor, verifique.');
+        alert(t('profile.alert_passwords_dont_match'));
         return;
       }
     }
@@ -64,14 +63,14 @@ export default function Profile() {
 
       await new Promise(resolve => setTimeout(resolve, 600));
 
-      alert('Perfil atualizado com sucesso!');
+      alert(t('profile.alert_success'));
       
       // Limpa os campos de senha por segurança após o sucesso
       setProfileData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
 
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
-      alert('Erro ao salvar as alterações. Verifique se digitou a senha atual correta.');
+      alert(t('profile.alert_error'));
     } finally {
       setLoading(false);
     }
@@ -87,12 +86,12 @@ export default function Profile() {
           onClick={() => navigate('/client/catalog')}
           style={{ background: 'none', border: 'none', color: '#aaa', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '20px', padding: 0, fontSize: '14px' }}
         >
-          <ArrowLeft size={16} /> {t('button_back') || 'Voltar para o Catálogo'}
+          <ArrowLeft size={16} /> {t('profile.btn_back')}
         </button>
 
         <div style={{ marginBottom: '30px' }}>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 'bold' }}>Meu Perfil</h1>
-          <p style={{ margin: 0, color: '#aaa' }}>Gerencie suas informações cadastrais e credenciais de segurança.</p>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 'bold' }}>{t('profile.title')}</h1>
+          <p style={{ margin: 0, color: '#aaa' }}>{t('profile.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ backgroundColor: '#1e1e1e', padding: '30px', borderRadius: '8px', border: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -100,7 +99,7 @@ export default function Profile() {
           {/* Campo Nome */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <User size={16} color="#8b5cf6" /> Nome Completo
+              <User size={16} color="#8b5cf6" /> {t('profile.label_name')}
             </label>
             <input 
               type="text"
@@ -115,7 +114,7 @@ export default function Profile() {
           {/* Campo Email */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={16} color="#8b5cf6" /> E-mail da Conta
+              <Mail size={16} color="#8b5cf6" /> {t('profile.label_email')}
             </label>
             <input 
               type="email"
@@ -129,17 +128,17 @@ export default function Profile() {
 
           <hr style={{ border: 'none', borderTop: '1px solid #333', margin: '10px 0' }} />
 
-          {/* Campo Senha Atual (Confirmação da antiga) */}
+          {/* Campo Senha Atual */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Lock size={16} color="#ef4444" /> Senha Atual
+              <Lock size={16} color="#ef4444" /> {t('profile.label_current_password')}
             </label>
             <input 
               type="password"
               name="currentPassword"
               value={profileData.currentPassword}
               onChange={handleChange}
-              placeholder="Digite sua senha atual para fazer alterações"
+              placeholder={t('profile.placeholder_current_password')}
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
           </div>
@@ -147,14 +146,14 @@ export default function Profile() {
           {/* Campo Nova Senha */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Lock size={16} color="#8b5cf6" /> Nova Senha
+              <Lock size={16} color="#8b5cf6" /> {t('profile.label_new_password')}
             </label>
             <input 
               type="password"
               name="password"
               value={profileData.password}
               onChange={handleChange}
-              placeholder="Digite a nova senha (opcional)"
+              placeholder={t('profile.placeholder_new_password')}
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
           </div>
@@ -162,14 +161,14 @@ export default function Profile() {
           {/* Campo Confirmar Nova Senha */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Lock size={16} color="#8b5cf6" /> Confirmar Nova Senha
+              <Lock size={16} color="#8b5cf6" /> {t('profile.label_confirm_password')}
             </label>
             <input 
               type="password"
               name="confirmPassword"
               value={profileData.confirmPassword}
               onChange={handleChange}
-              placeholder="Confirme a sua nova senha"
+              placeholder={t('profile.placeholder_confirm_password')}
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
           </div>
@@ -181,7 +180,7 @@ export default function Profile() {
             style={{ marginTop: '10px', padding: '14px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.2s' }}
           >
             <Save size={18} />
-            {loading ? 'Salvando...' : 'Salvar Alterações'}
+            {loading ? t('profile.btn_saving') : t('profile.btn_save')}
           </button>
 
         </form>
@@ -190,7 +189,9 @@ export default function Profile() {
       {/* BARRA DE ACESSIBILIDADE NO RODAPÉ */}
       <div style={{ maxWidth: '600px', margin: '40px auto 0 auto', width: '100%', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: '#666', fontSize: '13px' }}>
         <Keyboard size={16} color="#444" />
-        <span><strong>Atalhos:</strong> <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + C</kbd> Ver Tatuadores | <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + A</kbd> Meus Agendamentos</span>
+        <span>
+          <strong>{t('profile.shortcuts_title')}:</strong> <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + C</kbd> {t('profile.shortcut_catalog')} | <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + A</kbd> {t('profile.shortcut_appointments')}
+        </span>
       </div>
 
     </div>

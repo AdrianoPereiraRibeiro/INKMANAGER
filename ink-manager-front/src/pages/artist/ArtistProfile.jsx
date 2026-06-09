@@ -55,14 +55,14 @@ export default function ArtistProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validação de segurança para troca de senha
+    // Validação de segurança para troca de senha usando chaves i18n
     if (profileData.password) {
       if (!profileData.currentPassword) {
-        alert('Por favor, informe sua senha atual para definir uma nova.');
+        alert(t('artist_profile.alert_current_password_required'));
         return;
       }
       if (profileData.password !== profileData.confirmPassword) {
-        alert('A nova senha e a confirmação não coincidem!');
+        alert(t('artist_profile.alert_passwords_dont_match'));
         return;
       }
     }
@@ -74,12 +74,12 @@ export default function ArtistProfile() {
       // await api.put('/artists/profile', profileData);
 
       await new Promise(resolve => setTimeout(resolve, 600));
-      alert('Perfil profissional e horários atualizados com sucesso!');
+      alert(t('artist_profile.alert_success'));
       
       setProfileData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
     } catch (error) {
       console.error(error);
-      alert('Erro ao salvar perfil. Verifique sua senha atual.');
+      alert(t('artist_profile.alert_error'));
     } finally {
       setLoading(false);
     }
@@ -94,12 +94,12 @@ export default function ArtistProfile() {
           onClick={() => navigate('/artist/dashboard')}
           style={{ background: 'none', border: 'none', color: '#aaa', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '20px', padding: 0, fontSize: '14px' }}
         >
-          <ArrowLeft size={16} /> {t('button_back') || 'Voltar para o Dashboard'}
+          <ArrowLeft size={16} /> {t('button_back')}
         </button>
 
         <div style={{ marginBottom: '30px' }}>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 'bold' }}>Meu Perfil Profissional</h1>
-          <p style={{ margin: 0, color: '#aaa' }}>Configure seus dados de exibição, visibilidade e sua jornada de trabalho.</p>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 'bold' }}>{t('artist_profile.title')}</h1>
+          <p style={{ margin: 0, color: '#aaa' }}>{t('artist_profile.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ backgroundColor: '#1e1e1e', padding: '30px', borderRadius: '8px', border: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -108,7 +108,7 @@ export default function ArtistProfile() {
             {/* Nome */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <User size={16} color="#8b5cf6" /> Nome Artístico
+                <User size={16} color="#8b5cf6" /> {t('artist_profile.label_name')}
               </label>
               <input type="text" name="name" value={profileData.name} onChange={handleChange} required style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
             </div>
@@ -116,7 +116,7 @@ export default function ArtistProfile() {
             {/* Email */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Mail size={16} color="#8b5cf6" /> E-mail Profissional
+                <Mail size={16} color="#8b5cf6" /> {t('artist_profile.label_email')}
               </label>
               <input type="email" name="email" value={profileData.email} onChange={handleChange} required style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
             </div>
@@ -125,56 +125,58 @@ export default function ArtistProfile() {
           {/* Especialidade */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Award size={16} color="#8b5cf6" /> Suas Especialidades
+              <Award size={16} color="#8b5cf6" /> {t('artist_profile.label_specialty')}
             </label>
-            <input type="text" name="specialty" value={profileData.specialty} onChange={handleChange} placeholder="Ex: Realismo, Fine Line, Blackwork..." style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+            <input type="text" name="specialty" value={profileData.specialty} onChange={handleChange} placeholder={t('artist_profile.placeholder_specialty')} style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
           </div>
 
           {/* Bio */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileText size={16} color="#8b5cf6" /> Bio / Apresentação para Clientes
+              <FileText size={16} color="#8b5cf6" /> {t('artist_profile.label_bio')}
             </label>
-            <textarea name="bio" value={profileData.bio} onChange={handleChange} rows="3" placeholder="Conte sua história e experiência..." style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none', resize: 'vertical', fontFamily: 'sans-serif' }} />
+            <textarea name="bio" value={profileData.bio} onChange={handleChange} rows="3" placeholder={t('artist_profile.placeholder_bio')} style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none', resize: 'vertical', fontFamily: 'sans-serif' }} />
           </div>
 
-          {/* NOVA SEÇÃO: Horário de Trabalho / Jornada */}
+          {/* HORÁRIO DE TRABALHO / JORNADA */}
           <div style={{ backgroundColor: '#181818', padding: '20px', borderRadius: '6px', border: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <h4 style={{ margin: 0, fontSize: '15px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Clock size={16} color="#8b5cf6" /> Definição de Horário e Expediente
+              <Clock size={16} color="#8b5cf6" /> {t('artist_profile.schedule_section_title')}
             </h4>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', color: '#aaa' }}>Horário de Início</label>
+                <label style={{ fontSize: '13px', color: '#aaa' }}>{t('artist_profile.label_start_time')}</label>
                 <input type="time" name="startWorkTime" value={profileData.startWorkTime} onChange={handleChange} required style={{ padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none', cursor: 'pointer' }} />
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', color: '#aaa' }}>Horário de Término</label>
+                <label style={{ fontSize: '13px', color: '#aaa' }}>{t('artist_profile.label_end_time')}</label>
                 <input type="time" name="endWorkTime" value={profileData.endWorkTime} onChange={handleChange} required style={{ padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none', cursor: 'pointer' }} />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', color: '#aaa' }}>Dias de Atendimento</label>
+                <label style={{ fontSize: '13px', color: '#aaa' }}>{t('artist_profile.label_work_days')}</label>
                 <select name="workDays" value={profileData.workDays} onChange={handleChange} style={{ padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none', cursor: 'pointer' }}>
-                  <option value="Segunda a Sexta">Segunda a Sexta</option>
-                  <option value="Segunda a Sábado">Segunda a Sábado</option>
-                  <option value="Terça a Sábado">Terça a Sábado</option>
-                  <option value="Todos os dias">Todos os dias (Inclusivo Domingo)</option>
+                  <option value="Segunda a Sexta">{t('artist_profile.days_option_1')}</option>
+                  <option value="Segunda a Sábado">{t('artist_profile.days_option_2')}</option>
+                  <option value="Terça a Sábado">{t('artist_profile.days_option_3')}</option>
+                  <option value="Todos os dias">{t('artist_profile.days_option_4')}</option>
                 </select>
               </div>
             </div>
           </div>
 
           {/* Status de Ativação do Perfil */}
-          <div style={{ backgroundColor: '#2a2a2a', padding: '15px', borderRadius: '6px', border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ backgroundColor: '#2a2a2a', padding: '15px', borderRadius: '6px', border: '1px solid #444', display: 'flex', alignItems: 'center', justifycontent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {profileData.isActive ? <Eye size={20} color="#10b981" /> : <EyeOff size={20} color="#ef4444" />}
               <div>
-                <p style={{ margin: 0, fontSize: '15px', fontWeight: 'bold' }}>Status do Perfil: {profileData.isActive ? 'Ativo' : 'Pausado/Inativo'}</p>
+                <p style={{ margin: 0, fontSize: '15px', fontWeight: 'bold' }}>
+                  {t('artist_profile.status_title')}: {profileData.isActive ? t('artist_profile.status_active') : t('artist_profile.status_inactive')}
+                </p>
                 <p style={{ margin: '3px 0 0 0', fontSize: '12px', color: '#aaa' }}>
-                  {profileData.isActive ? 'Você está visível no catálogo para os clientes.' : 'Oculto do catálogo para novos agendamentos.'}
+                  {profileData.isActive ? t('artist_profile.status_desc_active') : t('artist_profile.status_desc_inactive')}
                 </p>
               </div>
             </div>
@@ -192,31 +194,31 @@ export default function ArtistProfile() {
           {/* Senhas */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Lock size={16} color="#ef4444" /> Senha Atual (Obrigatória para alterar dados)
+              <Lock size={16} color="#ef4444" /> {t('artist_profile.label_current_password')}
             </label>
-            <input type="password" name="currentPassword" value={profileData.currentPassword} onChange={handleChange} placeholder="Confirme sua senha para salvar" style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+            <input type="password" name="currentPassword" value={profileData.currentPassword} onChange={handleChange} placeholder={t('artist_profile.placeholder_current_password')} style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '14px', color: '#ccc' }}>Nova Senha</label>
-              <input type="password" name="password" value={profileData.password} onChange={handleChange} placeholder="Opcional" style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+              <label style={{ fontSize: '14px', color: '#ccc' }}>{t('artist_profile.label_new_password')}</label>
+              <input type="password" name="password" value={profileData.password} onChange={handleChange} placeholder={t('artist_profile.placeholder_optional')} style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '14px', color: '#ccc' }}>Confirmar Nova Senha</label>
-              <input type="password" name="confirmPassword" value={profileData.confirmPassword} onChange={handleChange} placeholder="Opcional" style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+              <label style={{ fontSize: '14px', color: '#ccc' }}>{t('artist_profile.label_confirm_password')}</label>
+              <input type="password" name="confirmPassword" value={profileData.confirmPassword} onChange={handleChange} placeholder={t('artist_profile.placeholder_optional')} style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
             </div>
           </div>
 
           <button type="submit" disabled={loading} style={{ marginTop: '10px', padding: '14px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <Save size={18} /> {loading ? 'Salvando...' : 'Salvar Alterações Profissionais'}
+            <Save size={18} /> {loading ? t('artist_profile.button_saving') : t('artist_profile.button_save')}
           </button>
         </form>
       </div>
 
       <div style={{ maxWidth: '700px', margin: '40px auto 0 auto', width: '100%', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: '#666', fontSize: '13px' }}>
         <Keyboard size={16} color="#444" />
-        <span><strong>Atalhos:</strong> <kbd style={{ background: '#222', padding: '3px 6px' }}>Alt + D</kbd> Dashboard | <kbd style={{ background: '#222', padding: '3px 6px' }}>Alt + S</kbd> Agenda</span>
+        <span><strong>{t('artist_profile.shortcuts_title')}:</strong> <kbd style={{ background: '#222', padding: '3px 6px' }}>Alt + D</kbd> Dashboard | <kbd style={{ background: '#222', padding: '3px 6px' }}>Alt + P</kbd> Perfil</span>
       </div>
     </div>
   );

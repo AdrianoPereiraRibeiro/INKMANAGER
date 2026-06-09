@@ -28,7 +28,7 @@ export default function Register() {
 
     // Validação simples
     if (!formData.name || !formData.email || !formData.password) {
-      alert('Por favor, preencha todos os campos!');
+      alert(t('register.alert_validation'));
       return;
     }
 
@@ -41,7 +41,7 @@ export default function Register() {
       // localStorage.setItem('@InkManager:token', token);
       */
 
-      alert('Conta criada com sucesso! Entrando no sistema...');
+      alert(t('register.alert_success'));
       
       // Salva uma simulação no localStorage apenas para histórico visual
       localStorage.setItem('registeredUser', JSON.stringify(formData));
@@ -58,7 +58,7 @@ export default function Register() {
 
     } catch (error) {
       console.error('Erro ao cadastrar:', error);
-      alert('Erro ao criar conta. Tente novamente.');
+      alert(t('register.alert_error'));
     }
   };
 
@@ -71,14 +71,14 @@ export default function Register() {
           onClick={() => navigate('/login')}
           style={{ background: 'none', border: 'none', color: '#aaa', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '20px', padding: 0, fontSize: '14px' }}
         >
-          <ArrowLeft size={16} /> {t('button_back') || 'Voltar para o Login'}
+          <ArrowLeft size={16} /> {t('register.btn_back')}
         </button>
 
         <h2 style={{ margin: '0 0 10px 0', fontSize: '28px', fontWeight: 'bold', textAlign: 'center' }}>
-          {t('button_register') || 'Criar Conta'}
+          {t('register.title')}
         </h2>
         <p style={{ margin: '0 0 30px 0', color: '#aaa', fontSize: '14px', textAlign: 'center' }}>
-          {t('welcome_register') || 'Seja bem-vindo! Preencha os dados abaixo.'}
+          {t('register.subtitle')}
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -86,14 +86,14 @@ export default function Register() {
           {/* Campo Nome */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <User size={16} color="#8b5cf6" /> {t('name') || 'Nome Completo'}
+              <User size={16} color="#8b5cf6" /> {t('register.label_name')}
             </label>
             <input 
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Ex: João Silva"
+              placeholder={t('register.placeholder_name')}
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
           </div>
@@ -101,14 +101,14 @@ export default function Register() {
           {/* Campo Email */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={16} color="#8b5cf6" /> {t('email')}
+              <Mail size={16} color="#8b5cf6" /> {t('register.label_email')}
             </label>
             <input 
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="seuemail@exemplo.com"
+              placeholder="email@email.com"
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
           </div>
@@ -116,7 +116,7 @@ export default function Register() {
           {/* Campo Senha */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Lock size={16} color="#8b5cf6" /> {t('password')}
+              <Lock size={16} color="#8b5cf6" /> {t('register.label_password')}
             </label>
             <input 
               type="password"
@@ -131,7 +131,7 @@ export default function Register() {
           {/* Tipo de Perfil (Role) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Users size={16} color="#8b5cf6" /> {t('profile_type')}
+              <Users size={16} color="#8b5cf6" /> {t('register.label_profile_type')}
             </label>
             <select
               name="role"
@@ -139,8 +139,8 @@ export default function Register() {
               onChange={handleChange}
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none', cursor: 'pointer' }}
             >
-              <option value="Client">{t('client')}</option>
-              <option value="Artist">{t('artist')}</option>
+              <option value="Client">{t('register.role_client')}</option>
+              <option value="Artist">{t('register.role_artist')}</option>
             </select>
           </div>
 
@@ -149,7 +149,7 @@ export default function Register() {
             type="submit"
             style={{ marginTop: '10px', padding: '14px', backgroundColor: '#8b5cf6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', transition: 'background 0.2s' }}
           >
-            {t('button_register')}
+            {t('register.btn_submit')}
           </button>
 
         </form>

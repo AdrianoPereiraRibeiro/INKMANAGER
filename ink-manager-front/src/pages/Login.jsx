@@ -46,7 +46,7 @@ export default function Login() {
 
     } catch (error) {
       console.error(error);
-      alert('Erro ao efetuar login. Verifique suas credenciais.');
+      alert(t('login.alert_error'));
     } finally {
       setLoading(false);
     }
@@ -74,20 +74,20 @@ export default function Login() {
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)'
       }}>
         <h2 style={{ margin: 0, textAlign: 'center', color: '#fff', fontSize: '26px', fontWeight: 'bold' }}>
-          {t('title')}
+          {t('login.title')}
         </h2>
         <p style={{ fontSize: '14px', color: '#aaa', textAlign: 'center', marginBottom: '10px' }}>
-          {t('welcome')}
+          {t('login.welcome')}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('email')}</label>
+          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.email')}</label>
           <input 
             type="email" 
             value={email} 
             onChange={e => setEmail(e.target.value)} 
             required 
-            placeholder="seuemail@exemplo.com"
+            placeholder="email@email.com"
             style={{ 
               padding: '12px', 
               borderRadius: '4px', 
@@ -100,7 +100,7 @@ export default function Login() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('password')}</label>
+          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.password')}</label>
           <input 
             type="password" 
             value={password} 
@@ -119,7 +119,7 @@ export default function Login() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('profile_type')}</label>
+          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.profile_type')}</label>
           <select 
             value={role} 
             onChange={e => setRole(e.target.value)} 
@@ -133,8 +133,8 @@ export default function Login() {
               outline: 'none'
             }}
           >
-            <option value="Client">{t('client')}</option>
-            <option value="Artist">{t('artist')}</option>
+            <option value="Client">{t('login.role_client')}</option>
+            <option value="Artist">{t('login.role_artist')}</option>
           </select>
         </div>
 
@@ -158,12 +158,12 @@ export default function Login() {
           }}
         >
           <LogIn size={18} /> 
-          {loading ? '...' : t('button_login')}
+          {loading ? '...' : t('login.button_login')}
         </button>
 
         {/* LINK / BOTAO PARA TELA DE CADASTRO */}
         <div style={{ textTransform: 'none', textAlign: 'center', marginTop: '10px', fontSize: '14px', color: '#aaa' }}>
-          Não tem uma conta?{' '}
+          {t('login.no_account')}{' '}
           <span 
             onClick={() => navigate('/register')} 
             style={{ 
@@ -176,7 +176,7 @@ export default function Login() {
             onMouseEnter={(e) => e.target.style.color = '#a78bfa'}
             onMouseLeave={(e) => e.target.style.color = '#8b5cf6'}
           >
-            {t('button_register')}
+            {t('login.button_register')}
           </span>
         </div>
 

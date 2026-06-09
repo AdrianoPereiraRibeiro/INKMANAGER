@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export default function ArtistDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   // Estados do Painel
@@ -20,14 +20,20 @@ export default function ArtistDashboard() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [priceInput, setPriceInput] = useState('');
 
+  // Define dinamicamente o código da localidade para formatação de moeda com Recharts/JS
+  const currentLang = i18n.language === 'en' ? 'en-US' : 'pt-BR';
+  const currentCurrency = i18n.language === 'en' ? 'USD' : 'BRL';
+
   useEffect(() => {
-    // Dados alinhados com o layout das imagens de referência (image_44709d.png e image_445db9.png)
     setMetrics({ totalSessions: 24, estimatedRevenue: 14800.00 });
 
     setChartData([
-      { month: 'Jan', agendamentos: 12 }, { month: 'Fev', agendamentos: 18 },
-      { month: 'Mar', agendamentos: 15 }, { month: 'Abr', agendamentos: 20 },
-      { month: 'Mai', agendamentos: 24 }, { month: 'Jun', agendamentos: 30 },
+      { month: t('months.jan'), agendamentos: 12 }, 
+      { month: t('months.feb'), agendamentos: 18 },
+      { month: t('months.mar'), agendamentos: 15 }, 
+      { month: t('months.apr'), agendamentos: 20 },
+      { month: t('months.may'), agendamentos: 24 }, 
+      { month: t('months.jun'), agendamentos: 30 },
     ]);
 
     const fakeAppointments = [
@@ -69,7 +75,7 @@ export default function ArtistDashboard() {
       },
     ];
     setAppointments(fakeAppointments);
-  }, []);
+  }, [t]);
 
   const openDetailsModal = (app) => {
     setSelectedApp(app);
@@ -79,7 +85,7 @@ export default function ArtistDashboard() {
   const handleAcceptWithPrice = (e) => {
     e.preventDefault();
     if (!priceInput || parseFloat(priceInput) <= 0) {
-      alert('Por favor, defina um preço válido para a sessão.');
+      alert(t('artist_dashboard.alert_invalid_price'));
       return;
     }
 
@@ -91,12 +97,15 @@ export default function ArtistDashboard() {
         : app
     ));
 
-    alert(`Agendamento de ${selectedApp.client} confirmado com o valor de R$ ${finalPrice.toFixed(2)}!`);
+    alert(t('artist_dashboard.alert_confirmed_success', { 
+      client: selectedApp.client, 
+      price: finalPrice.toLocaleString(currentLang, { style: 'currency', currency: currentCurrency }) 
+    }));
     setSelectedApp(null);
   };
 
   const handleDecline = (id) => {
-    if(window.confirm("Tem certeza que deseja recusar este agendamento?")) {
+    if(window.confirm(t('artist_dashboard.confirm_decline'))) {
       setAppointments(prev => prev.map(app => app.id === id ? { ...app, status: 'Declined' } : app));
       setSelectedApp(null);
     }
@@ -110,14 +119,14 @@ export default function ArtistDashboard() {
         {/* Cabeçalho */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ margin: '0 0 5px 0', fontSize: '28px', fontWeight: 'bold' }}>Painel do Tatuador</h1>
-            <p style={{ margin: 0, color: '#aaa', fontSize: '14px' }}>Gestão de propostas, orçamentos e desempenho do estúdio</p>
+            <h1 style={{ margin: '0 0 5px 0', fontSize: '28px', fontWeight: 'bold' }}>{t('artist_dashboard.title')}</h1>
+            <p style={{ margin: 0, color: '#aaa', fontSize: '14px' }}>{t('artist_dashboard.subtitle')}</p>
           </div>
           <button 
             onClick={() => navigate('/artist/profile')}
             style={{ padding: '10px 18px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <User size={18} color="#8b5cf6" /> Meu Perfil
+            <User size={18} color="#8b5cf6" /> {t('artist_dashboard.btn_profile')}
           </button>
         </div>
 
@@ -126,25 +135,26 @@ export default function ArtistDashboard() {
           <div style={{ backgroundColor: '#1e1e1e', borderRadius: '12px', padding: '20px', border: '1px solid #333', display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ backgroundColor: '#2a2a2a', padding: '12px', borderRadius: '8px' }}><Calendar size={24} color="#8b5cf6" /></div>
             <div>
-              <p style={{ margin: 0, color: '#aaa', fontSize: '13px' }}>Sessões no Mês</p>
+              <p style={{ margin: 0, color: '#aaa', fontSize: '13px' }}>{t('artist_dashboard.metric_sessions')}</p>
               <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>{metrics.totalSessions}</h2>
             </div>
           </div>
           <div style={{ backgroundColor: '#1e1e1e', borderRadius: '12px', padding: '20px', border: '1px solid #333', display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ backgroundColor: '#2a2a2a', padding: '12px', borderRadius: '8px' }}><DollarSign size={24} color="#10b981" /></div>
             <div>
-              <p style={{ margin: 0, color: '#aaa', fontSize: '13px' }}>Faturamento Estimado</p>
-              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>{metrics.estimatedRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</h2>
+              <p style={{ margin: 0, color: '#aaa', fontSize: '13px' }}>{t('artist_dashboard.metric_revenue')}</p>
+              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
+                {metrics.estimatedRevenue.toLocaleString(currentLang, { style: 'currency', currency: currentCurrency })}
+              </h2>
             </div>
           </div>
         </div>
 
-        {/* 2. GRÁFICO EXPANDIDO (Tamanho máximo no topo) */}
+        {/* 2. GRÁFICO EXPANDIBILIDADE */}
         <div style={{ backgroundColor: '#1e1e1e', borderRadius: '12px', padding: '25px', border: '1px solid #333' }}>
           <h3 style={{ margin: '0 0 25px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <TrendingUp size={20} color="#8b5cf6" /> Agendamentos por Mês
+            <TrendingUp size={20} color="#8b5cf6" /> {t('artist_dashboard.chart_title')}
           </h3>
-          {/* Altura esticada para 320px para dar destaque à demanda */}
           <div style={{ width: '100%', height: 320 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ left: -20, right: 10 }}>
@@ -158,30 +168,30 @@ export default function ArtistDashboard() {
           </div>
         </div>
 
-        {/* 3. LISTA DE ATENDIMENTOS ABAIXO (Em tamanho cheio e super detalhada) */}
+        {/* 3. LISTA DE ATENDIMENTOS */}
         <div style={{ backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid #333', overflow: 'hidden' }}>
           <div style={{ padding: '20px 25px', borderBottom: '1px solid #333' }}>
             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Clock size={20} color="#8b5cf6" /> Pedidos e Agendamentos Recebidos
+              <Clock size={20} color="#8b5cf6" /> {t('artist_dashboard.list_title')}
             </h3>
           </div>
           
           <div style={{ padding: '10px 15px' }}>
             {appointments.length === 0 ? (
-              <p style={{ padding: '30px', color: '#666', textAlign: 'center' }}>Nenhum pedido recebido até o momento.</p>
+              <p style={{ padding: '30px', color: '#666', textAlign: 'center' }}>{t('artist_dashboard.no_appointments')}</p>
             ) : (
               appointments.map(app => (
                 <div key={app.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 15px', borderBottom: '1px solid #262626' }}>
                   <div>
                     <h4 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 'bold' }}>{app.client}</h4>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '15px', fontSize: '13px', color: '#aaa' }}>
-                      <span>{new Date(app.date).toLocaleDateString('pt-BR')} às {app.time}</span>
+                      <span>{new Date(app.date).toLocaleDateString(currentLang)} {t('artist_dashboard.at')} {app.time}</span>
                       <span style={{ backgroundColor: '#262626', color: '#8b5cf6', padding: '3px 10px', borderRadius: '20px', fontWeight: 'bold', fontSize: '12px' }}>
                         {app.style} ({app.sizeCm})
                       </span>
                       {app.price > 0 && (
                         <span style={{ color: '#10b981', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          Orçamento: R$ {app.price.toFixed(2)}
+                          {t('artist_dashboard.budget_label')}: {app.price.toLocaleString(currentLang, { style: 'currency', currency: currentCurrency })}
                         </span>
                       )}
                     </div>
@@ -195,15 +205,15 @@ export default function ArtistDashboard() {
                         onMouseEnter={(e) => e.target.style.backgroundColor = '#a78bfa'}
                         onMouseLeave={(e) => e.target.style.backgroundColor = '#8b5cf6'}
                       >
-                        <Eye size={16} /> Analisar e Precificar
+                        <Eye size={16} /> {t('artist_dashboard.btn_analyze')}
                       </button>
                     ) : app.status === 'Confirmed' ? (
                       <span style={{ fontSize: '13px', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '10px' }}>
-                        <CheckCircle size={18} /> Confirmado
+                        <CheckCircle size={18} /> {t('artist_dashboard.status_confirmed')}
                       </span>
                     ) : (
                       <span style={{ fontSize: '13px', color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '10px' }}>
-                        <XCircle size={18} /> Recusado
+                        <XCircle size={18} /> {t('artist_dashboard.status_declined')}
                       </span>
                     )}
                   </div>
@@ -213,45 +223,49 @@ export default function ArtistDashboard() {
           </div>
         </div>
 
-        {/* MODAL DINÂMICO DE ANÁLISE DETALHADA E ENVIO DE PREÇO */}
+        {/* MODAL DINÂMICO DE ANÁLISE */}
         {selectedApp && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div style={{ backgroundColor: '#1e1e1e', border: '1px solid #333', borderRadius: '8px', width: '100%', maxWidth: '550px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', borderBottom: '1px solid #333', paddingBottom: '15px' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Análise do Pedido</h3>
-                  <p style={{ margin: '4px 0 0 0', color: '#aaa', fontSize: '13px' }}>Solicitado por: <strong>{selectedApp.client}</strong></p>
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>{t('artist_dashboard.modal_title')}</h3>
+                  <p style={{ margin: '4px 0 0 0', color: '#aaa', fontSize: '13px' }}>
+                    {t('artist_dashboard.modal_requested_by')} <strong>{selectedApp.client}</strong>
+                  </p>
                 </div>
                 <button onClick={() => setSelectedApp(null)} style={{ background: 'none', border: 'none', color: '#666', fontSize: '24px', cursor: 'pointer', lineHeight: '20px' }}>&times;</button>
               </div>
 
-              {/* Informações estruturais coletadas */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', backgroundColor: '#121212', padding: '15px', borderRadius: '6px', border: '1px solid #2a2a2a' }}>
                 <div>
-                  <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '2px' }}>ESTILO SELECIONADO</span>
+                  <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '2px' }}>{t('artist_dashboard.modal_style')}</span>
                   <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#8b5cf6' }}>{selectedApp.style}</span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '2px' }}>TAMANHO SOLICITADO</span>
+                  <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '2px' }}>{t('artist_dashboard.modal_size')}</span>
                   <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{selectedApp.sizeCm}</span>
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
-                  <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '2px' }}>LOCAL DO CORPO</span>
+                  <span style={{ fontSize: '11px', color: '#666', display: 'block', marginBottom: '2px' }}>{t('artist_dashboard.modal_body_part')}</span>
                   <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{selectedApp.bodyPart}</span>
                 </div>
               </div>
 
               <div>
-                <span style={{ fontSize: '12px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}><FileText size={14} /> Idéia/Descrição do Cliente:</span>
-                <p style={{ margin: 0, fontSize: '14px', color: '#ccc', backgroundColor: '#2a2a2a', padding: '12px', borderRadius: '6px', lineHeight: '1.4', fontStyle: 'italic' }}>"{selectedApp.description}"</p>
+                <span style={{ fontSize: '12px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <FileText size={14} /> {t('artist_dashboard.modal_description_label')}
+                </span>
+                <p style={{ margin: 0, fontSize: '14px', color: '#ccc', backgroundColor: '#2a2a2a', padding: '12px', borderRadius: '6px', lineHeight: '1.4', fontStyle: 'italic' }}>
+                  "{selectedApp.description}"
+                </p>
               </div>
 
-              {/* Form de Retorno de Preço */}
               <form onSubmit={handleAcceptWithPrice} style={{ borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <DollarIcon size={16} /> Definir Preço da Sessão (R$)
+                    <DollarIcon size={16} /> {t('artist_dashboard.modal_price_label')}
                   </label>
                   <input 
                     type="number" 
@@ -267,10 +281,10 @@ export default function ArtistDashboard() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
                   <button type="submit" style={{ padding: '12px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
-                    Aceitar e Enviar Preço
+                    {t('artist_dashboard.modal_btn_accept')}
                   </button>
                   <button type="button" onClick={() => handleDecline(selectedApp.id)} style={{ padding: '12px', backgroundColor: '#2a2a2a', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>
-                    Recusar Pedido
+                    {t('artist_dashboard.modal_btn_decline')}
                   </button>
                 </div>
               </form>
@@ -279,10 +293,12 @@ export default function ArtistDashboard() {
           </div>
         )}
 
-        {/* Rodapé de Acessibilidade */}
+        {/* Rodapé */}
         <div style={{ borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: '#666', fontSize: '12px', marginBottom: '20px' }}>
           <Keyboard size={14} />
-          <span><strong>Atalhos do Painel:</strong> <kbd style={{ background: '#222', padding: '2px 5px', borderRadius: '3px' }}>Alt + P</kbd> Perfil | <kbd style={{ background: '#222', padding: '2px 5px', borderRadius: '3px' }}>Alt + L</kbd> Sair</span>
+          <span>
+            <strong>{t('artist_dashboard.footer_shortcuts')}:</strong> <kbd style={{ background: '#222', padding: '2px 5px', borderRadius: '3px' }}>Alt + P</kbd> {t('artist_dashboard.footer_profile')} | <kbd style={{ background: '#222', padding: '2px 5px', borderRadius: '3px' }}>Alt + L</kbd> {t('artist_dashboard.footer_logout')}
+          </span>
         </div>
 
       </div>
