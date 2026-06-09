@@ -1,0 +1,6 @@
+@InkManegerAPI_HostAddress = http://localhost:5225
+
+GET {{InkManegerAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
