@@ -1,10 +1,10 @@
-﻿namespace InkManegerAPI.Controllers
+﻿using InkManegerAPI.Data;
+using InkManegerAPI.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace InkManegerAPI.Controllers
 {
-    using InkManagerAPI.Data;
-    using InkManagerAPI.Models;
-    using InkManegerAPI.Data;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
 
         [ApiController]
         [Route("api/[controller]")]
@@ -53,7 +53,7 @@
             /// Autentica o usuário e retorna o perfil/role para redirecionamento no React.
             /// </summary>
             [HttpPost("login")]
-            public async Task<IActionResult> Login([Obsolete][FromBody] LoginDto loginDto)
+            public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
             {
                 var user = await _context.Users
                     .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.PasswordHash == loginDto.Password);

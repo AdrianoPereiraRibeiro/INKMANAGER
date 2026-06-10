@@ -1,6 +1,5 @@
-﻿using InkManagerAPI.Data;
-using InkManagerAPI.Models;
-using InkManegerAPI.Data;
+﻿using InkManegerAPI.Data;
+using InkManegerAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

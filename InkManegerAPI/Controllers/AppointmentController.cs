@@ -1,8 +1,6 @@
-﻿using InkManagerAPI.Data;
-using InkManagerAPI.Models;
-using InkManagerAPI.Services;
+﻿using InkManagerAPI.Services;
 using InkManegerAPI.Data;
-using InkManegerAPI.Services;
+using InkManegerAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -90,4 +88,4 @@ namespace InkManegerAPI.Controllers
             }
         }
     }
-}
+
