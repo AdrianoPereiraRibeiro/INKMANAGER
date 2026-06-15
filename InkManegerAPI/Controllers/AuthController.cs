@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InkManegerAPI.Controllers
 {
-
         [ApiController]
         [Route("api/[controller]")]
         public class AuthController : ControllerBase
@@ -17,46 +16,72 @@ namespace InkManegerAPI.Controllers
                 _context = context;
             }
 
-            /// <summary>
-            /// Realiza o cadastro de um novo usuário (Cliente ou Tatuador).
-            /// </summary>
             [HttpPost("register")]
-            public async Task<IActionResult> Register([FromBody] User user)
+            public async Task<IActionResult> Register([FromBody] UserRegisterDto registerDto)
             {
-                if (await _context.Users.AnyAsync(u => u.Email == user.Email))
+                // Se o modelo enviado pelo React estiver inválido por falta de algum campo, avisa o front
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email.Trim()))
                 {
                     return BadRequest(new { message = "Este e-mail já está cadastrado." });
                 }
 
-                // Nota: Em produção, use criptografia (BCrypt). Para o MVP acadêmico, salvaremos direto.
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                // Se for um Tatuador, cria automaticamente o perfil profissional vinculado
-                if (user.Role == UserRole.Artist)
+                var user = new User
                 {
-                    var artistProfile = new TattooArtist
-                    {
-                        UserId = user.Id,
-                        Speciality = "Defina sua especialidade",
-                        Bio = "Fale um pouco sobre você",
-                        PortfolioLink = ""
-                    };
-                    _context.TattooArtists.Add(artistProfile);
-                    await _context.SaveChangesAsync();
-                }
+                    Name = registerDto.Name,
+                    Email = registerDto.Email.Trim(),
+                    PasswordHash = registerDto.Password, // Alimenta a propriedade requerida pelo banco
+                    Role = registerDto.Role
+                };
 
-                return StatusCode(201, new { message = "Usuário registrado com sucesso!", userId = user.Id, role = user.Role.ToString() });
+                try
+                {
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
+
+                    if (user.Role == UserRole.Artist)
+                    {
+                        var artistProfile = new TattooArtist
+                        {
+                            UserId = user.Id,
+                            Speciality = "Defina sua especialidade",
+                            Bio = "Fale um pouco sobre você",
+                            PortfolioLink = ""
+                        };
+                        _context.TattooArtists.Add(artistProfile);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    return StatusCode(201, new
+                    {
+                        message = "Usuário registrado com sucesso!",
+                        userId = user.Id,
+                        token = "mvp-mock-token-" + user.Id,
+                        role = user.Role.ToString()
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Se der qualquer erro de validação ou banco, conseguiremos ver no console da API
+                    return StatusCode(500, new { message = "Erro interno ao salvar no banco.", detalhes = ex.Message });
+                }
             }
 
-            /// <summary>
-            /// Autentica o usuário e retorna o perfil/role para redirecionamento no React.
-            /// </summary>
             [HttpPost("login")]
             public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Busca comparando exatamente os campos limpos
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.PasswordHash == loginDto.Password);
+                    .FirstOrDefaultAsync(u => u.Email == loginDto.Email.Trim() && u.PasswordHash == loginDto.Password);
 
                 if (user == null)
                 {
@@ -65,10 +90,11 @@ namespace InkManegerAPI.Controllers
 
                 return Ok(new
                 {
-                    id = user.Id,
+                    userId = user.Id,
                     name = user.Name,
                     email = user.Email,
-                    role = user.Role.ToString()
+                    role = user.Role.ToString(),
+                    token = "mvp-mock-token-" + user.Id
                 });
             }
         }
@@ -78,5 +104,12 @@ namespace InkManegerAPI.Controllers
             public string Email { get; set; } = string.Empty;
             public string Password { get; set; } = string.Empty;
         }
-    }
 
+        public class UserRegisterDto
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+            public UserRole Role { get; set; }
+        }
+    }

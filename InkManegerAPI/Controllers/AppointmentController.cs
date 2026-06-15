@@ -19,9 +19,7 @@ namespace InkManegerAPI.Controllers
                 _appointmentService = appointmentService;
             }
 
-            /// <summary>
-            /// Solicita um novo agendamento (Valida conflito de horários).
-            /// </summary>
+            // [CREATE] - Solicitar um novo agendamento (Com validação de conflito)
             [HttpPost]
             public async Task<IActionResult> Create([FromBody] Appointment appointment)
             {
@@ -39,9 +37,7 @@ namespace InkManegerAPI.Controllers
                 return StatusCode(201, appointment);
             }
 
-            /// <summary>
-            /// Retorna a agenda de um cliente específico (Tela: Meus Agendamentos).
-            /// </summary>
+            // [READ] - Listar os agendamentos de um cliente específico
             [HttpGet("client/{clientId}")]
             public async Task<IActionResult> GetByClient(int clientId)
             {
@@ -55,9 +51,7 @@ namespace InkManegerAPI.Controllers
                 return Ok(appointments);
             }
 
-            /// <summary>
-            /// Retorna todos os agendamentos de um tatuador (Tela: Gerenciador de Agenda do Tatuador).
-            /// </summary>
+            // [READ] - Listar os agendamentos de um tatuador específico (Para a agenda dele)
             [HttpGet("artist/{artistId}")]
             public async Task<IActionResult> GetByArtist(int artistId)
             {
@@ -70,11 +64,7 @@ namespace InkManegerAPI.Controllers
                 return Ok(appointments);
             }
 
-            /// <summary>
-            /// Altera o status de um agendamento (Aprovar ou Recusar).
-            /// </summary>
-            /// <param name="id">ID do agendamento.</param>
-            /// <param name="status">Novo status (Confirmed ou Canceled).</param>
+            // [UPDATE STATUS] - Aceitar/Recusar Agendamento (Fluxo de Aprovação)
             [HttpPut("{id}/status")]
             public async Task<IActionResult> UpdateStatus(int id, [FromQuery] AppointmentStatus status)
             {
@@ -84,8 +74,49 @@ namespace InkManegerAPI.Controllers
                 appointment.Status = status;
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = $"Agendamento atualizado para: {status}" });
+                return Ok(new { message = $"Agendamento atualizado para: {status}", appointment });
+            }
+
+            // [UPDATE DATA] - Editar informações do agendamento (Caso queiram mudar a data ou notas)
+            [HttpPut("{id}")]
+            public async Task<IActionResult> Update(int id, [FromBody] AppointmentUpdateDto dto)
+            {
+                var appointment = await _context.Appointments.FindAsync(id);
+                if (appointment == null) return NotFound(new { message = "Agendamento não encontrado." });
+
+                // Se mudou a data, revalida o conflito de horário
+                if (appointment.DateTime != dto.DateTime)
+                {
+                    bool hasConflict = await _appointmentService.HasScheduleConflictAsync(appointment.ArtistId, dto.DateTime);
+                    if (hasConflict) return BadRequest(new { message = "Nova data indisponível para este artista." });
+                }
+
+                appointment.DateTime = dto.DateTime;
+                appointment.EstimatedPrice = dto.EstimatedPrice;
+                appointment.Notes = dto.Notes;
+
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Agendamento atualizado com sucesso!", appointment });
+            }
+
+            // [DELETE] - Cancelar/Apagar um agendamento definitivamente
+            [HttpDelete("{id}")]
+            public async Task<IActionResult> Delete(int id)
+            {
+                var appointment = await _context.Appointments.FindAsync(id);
+                if (appointment == null) return NotFound(new { message = "Agendamento não encontrado." });
+
+                _context.Appointments.Remove(appointment);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Agendamento removido com sucesso do sistema." });
             }
         }
-    }
 
+        public class AppointmentUpdateDto
+        {
+            public DateTime DateTime { get; set; }
+            public decimal EstimatedPrice { get; set; }
+            public string Notes { get; set; } = string.Empty;
+        }
+    }

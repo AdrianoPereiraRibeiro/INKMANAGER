@@ -4,6 +4,8 @@ using InkManegerAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InkManegerAPI
 {
@@ -17,7 +19,17 @@ namespace InkManegerAPI
             // 1. CONFIGURAÇÃO DOS SERVIÇOS (DI)
             // ==========================================
 
-            builder.Services.AddControllers();
+            // AJUSTE CRÍTICO: Configura os Controladores com suporte a Enums em String e formatação camelCase
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // Permite que o C# converta strings do React ("Client" ou "Artist") diretamente para Enums C#
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
+                    // Força a API a responder em camelCase (Ex: userId, token, name) para compatibilidade perfeita com o React
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                });
+
             builder.Services.AddEndpointsApiExplorer();
 
             // Configuração do Swagger com suporte a comentários XML
