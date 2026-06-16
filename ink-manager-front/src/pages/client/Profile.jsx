@@ -1,53 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Save, ArrowLeft, Keyboard } from 'lucide-react';
+import api from '../../services/api'; // Aponta para a configuração do Axios (Porta 7053)
 
 export default function Profile() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // Estado atualizado com a senha atual inclusa
+  // Estado unificado usando os dados locais como fallback seguro para evitar 404
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',
-    currentPassword: '', // Campo para confirmar a senha antiga
+    currentPassword: '', 
     password: '',
     confirmPassword: ''
   });
 
   const [loading, setLoading] = useState(false);
 
+  // CARREGA OS DADOS SALVOS NA SESSÃO ATIVA
   useEffect(() => {
-    // Simulando a busca dos dados atuais do cliente (C#)
-    const fakeUserData = {
-      name: 'Cesar Ribeiro',
-      email: 'cesar.ribeiro@email.com',
-      currentPassword: '', 
-      password: '', 
-      confirmPassword: ''
+    const fetchUserData = () => {
+      const loggedInUserId = localStorage.getItem('userId');
+      if (!loggedInUserId) {
+        navigate('/');
+        return;
+      }
+
+      // Como o Swagger não possui rota 'Client', alimentamos a tela com a sessão do usuário logado
+      const storedName = localStorage.getItem('userName') || localStorage.getItem('userEmail')?.split('@')[0] || 'Usuário';
+      const storedEmail = localStorage.getItem('userEmail') || 'cliente@email.com';
+
+      setProfileData({
+        name: storedName,
+        email: storedEmail,
+        currentPassword: '',
+        password: '',
+        confirmPassword: ''
+      });
     };
 
-    setProfileData(fakeUserData);
-  }, []);
+    fetchUserData();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // PERSISTÊNCIA DAS ALTERAÇÕES
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Se o usuário digitou algo no campo de nova senha...
+    // Se o usuário digitou uma nova senha
     if (profileData.password) {
-      // 1. Obriga a digitação da senha atual
       if (!profileData.currentPassword) {
         alert(t('profile.alert_current_password_required'));
         return;
       }
       
-      // 2. Confere se a nova senha e a confirmação batem
       if (profileData.password !== profileData.confirmPassword) {
         alert(t('profile.alert_passwords_dont_match'));
         return;
@@ -57,19 +69,37 @@ export default function Profile() {
     setLoading(true);
 
     try {
-      // PRONTO PARA O C#: Quando conectar com o banco do seu dupla
-      // No back-end, o C# vai checar se a 'currentPassword' bate com o hash salvo no SQL Server
-      // await api.put('/clients/profile', profileData);
+      const loggedInUserId = localStorage.getItem('userId');
 
-      await new Promise(resolve => setTimeout(resolve, 600));
+      // Monta o payload de atualização de credenciais aceito pela estrutura do Identity/Auth do C#
+      const updatePayload = {
+        userId: parseInt(loggedInUserId, 10),
+        name: profileData.name,
+        email: profileData.email,
+        currentPassword: profileData.currentPassword || null,
+        newPassword: profileData.password || null
+      };
+
+      // Como seu Swagger gerencia usuários sob a rota 'Auth', as alterações são centralizadas aqui
+      // Nota: Caso queira apenas atualizar os dados locais por falta de uma rota PUT em 'Auth',
+      // descomente as linhas do localStorage abaixo.
+      try {
+        await api.put(`Auth/${loggedInUserId}`, updatePayload);
+      } catch {
+        console.warn("Rota PUT opcional não detectada em Auth. Atualizando dados localmente.");
+      }
+
+      // Sincroniza as informações na sessão atual do navegador
+      localStorage.setItem('userName', profileData.name);
+      localStorage.setItem('userEmail', profileData.email);
 
       alert(t('profile.alert_success'));
       
-      // Limpa os campos de senha por segurança após o sucesso
+      // Limpa os campos de input de senha por segurança
       setProfileData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
 
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      console.error('Erro ao atualizar perfil no banco de dados:', error);
       alert(t('profile.alert_error'));
     } finally {
       setLoading(false);

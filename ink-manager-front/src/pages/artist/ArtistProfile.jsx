@@ -1,48 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Award, FileText, Save, ArrowLeft, Keyboard, Eye, EyeOff, Clock } from 'lucide-react';
-import api from '../../services/api'; // Ajuste o caminho se necessário
+import api from '../../services/api'; // Utilizando a porta 7053 configurada
 
 export default function ArtistProfile() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // Estado atualizado com Status de Ativação e Horários de Trabalho
+  // Estado unificado com chaves do Front e propriedades do Back-end
   const [profileData, setProfileData] = useState({
+    id: null, // Armazenará o ID do Tatuador obtido da API
     name: '',
     email: '',
     specialty: '',
     bio: '',
+    portfolioLink: '',
     isActive: true,
-    startWorkTime: '09:00', // Horário de início padrão
-    endWorkTime: '18:00',   // Horário de término padrão
-    workDays: 'Segunda a Sexta', // Dias de atendimento
+    startWorkTime: '09:00',
+    endWorkTime: '18:00',
+    workDays: 'Segunda a Sexta',
     currentPassword: '',
     password: '',
     confirmPassword: ''
   });
 
-  const [loading, setLoading] = useState(false);
+  // Nascer como true elimina a necessidade de chamar setLoading(true) síncronamente
+  const [loading, setLoading] = useState(true);
 
+  // BUSCA REAL DOS DADOS DO ARTISTA NO BANCO (READ do CRUD)
   useEffect(() => {
-    // Simulando a busca dos dados do artista (C# / SQL Server) com a nova carga de horários
-    const fakeArtistData = {
-      name: 'Thiago Silva',
-      email: 'thiago.tatto@email.com',
-      specialty: 'Blackwork / Geométrico',
-      bio: 'Especialista em linhas finas e pontilhismo com mais de 5 anos de estrada.',
-      isActive: true,
-      startWorkTime: '10:00', 
-      endWorkTime: '19:00',
-      workDays: 'Terça a Sábado',
-      currentPassword: '',
-      password: '',
-      confirmPassword: ''
+    const loggedInUserId = localStorage.getItem('userId');
+
+    if (!loggedInUserId) {
+      alert("Sessão expirada. Faça login novamente.");
+      navigate('/');
+      return;
+    }
+
+    const fetchArtistData = async () => {
+      try {
+        // Busca todos os tatuadores e filtra o que corresponde ao usuário logado
+        const res = await api.get('/TattooArtist');
+        const currentArtist = res.data.find(a => String(a.userId) === String(loggedInUserId));
+        
+        if (currentArtist) {
+          setProfileData(prev => ({
+            ...prev,
+            id: currentArtist.id, // ID da tabela TattooArtists
+            name: currentArtist.name,
+            email: currentArtist.email,
+            specialty: currentArtist.speciality || '',
+            bio: currentArtist.bio || '',
+            portfolioLink: currentArtist.portfolioLink || ''
+          }));
+        }
+      } catch (err) {
+        console.error("Erro ao carregar perfil do artista:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setProfileData(fakeArtistData);
-  }, []);
+    fetchArtistData();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -52,10 +73,11 @@ export default function ArtistProfile() {
     }));
   };
 
+  // SALVA AS ALTERAÇÕES NO BANCO DE DADOS (UPDATE do CRUD)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validação de segurança para troca de senha usando chaves i18n
+    // Validações locais mantidas
     if (profileData.password) {
       if (!profileData.currentPassword) {
         alert(t('artist_profile.alert_current_password_required'));
@@ -70,15 +92,18 @@ export default function ArtistProfile() {
     setLoading(true);
 
     try {
-      // PRONTO PARA O C#: Envia as atualizações, incluindo os novos campos de horário
-      // await api.put('/artists/profile', profileData);
+      // Dispara o PUT para /api/TattooArtist/{id} com o DTO esperado pelo C#
+      await api.put(`/TattooArtist/${profileData.id}`, {
+        speciality: profileData.specialty, // Mapeado para o C# (Speciality)
+        bio: profileData.bio,
+        portfolioLink: profileData.portfolioLink
+      });
 
-      await new Promise(resolve => setTimeout(resolve, 600));
       alert(t('artist_profile.alert_success'));
       
       setProfileData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao salvar perfil no C#:", error);
       alert(t('artist_profile.alert_error'));
     } finally {
       setLoading(false);
@@ -105,20 +130,20 @@ export default function ArtistProfile() {
         <form onSubmit={handleSubmit} style={{ backgroundColor: '#1e1e1e', padding: '30px', borderRadius: '8px', border: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            {/* Nome */}
+            {/* Nome (Somente leitura para integridade do User) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <User size={16} color="#8b5cf6" /> {t('artist_profile.label_name')}
               </label>
-              <input type="text" name="name" value={profileData.name} onChange={handleChange} required style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+              <input type="text" name="name" value={profileData.name} onChange={handleChange} disabled style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#888', outline: 'none', cursor: 'not-allowed' }} />
             </div>
 
-            {/* Email */}
+            {/* Email (Somente leitura) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '14px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Mail size={16} color="#8b5cf6" /> {t('artist_profile.label_email')}
               </label>
-              <input type="email" name="email" value={profileData.email} onChange={handleChange} required style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', outline: 'none' }} />
+              <input type="email" name="email" value={profileData.email} onChange={handleChange} disabled style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#888', outline: 'none', cursor: 'not-allowed' }} />
             </div>
           </div>
 
@@ -167,8 +192,8 @@ export default function ArtistProfile() {
             </div>
           </div>
 
-          {/* Status de Ativação do Perfil */}
-          <div style={{ backgroundColor: '#2a2a2a', padding: '15px', borderRadius: '6px', border: '1px solid #444', display: 'flex', alignItems: 'center', justifycontent: 'space-between' }}>
+          {/* Status de Ativação do Perfil (LINHA CORRIGIDA) */}
+          <div style={{ backgroundColor: '#2a2a2a', padding: '15px', borderRadius: '6px', border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {profileData.isActive ? <Eye size={20} color="#10b981" /> : <EyeOff size={20} color="#ef4444" />}
               <div>

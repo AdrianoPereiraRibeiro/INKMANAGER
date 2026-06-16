@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn } from 'lucide-react';
-import api from '../services/api'; // Conexão pronta com o C#
+import api from '../services/api'; // Conexão pronta com o C# (Porta 7053)
 
 export default function Login() {
   const { t } = useTranslation();
-  const { login } = useAuth(); // Função global para definir o perfil logado
+  const { login } = useAuth(); // Função global para definir o perfil logado no contexto
   const navigate = useNavigate(); // Direcionador de páginas
 
   const [email, setEmail] = useState('');
@@ -20,33 +20,72 @@ export default function Login() {
     setLoading(true);
 
     try {
-      /* ======================================================================
-        INTEGRAÇÃO COM O BACK-END (C#):
-        Quando o seu dupla criar o endpoint de login, basta tirar as barras '//'
-        das linhas abaixo para testar a requisição real no SQL Server:
-        
-        const response = await api.post('/auth/login', { email, password, role });
-        const { token } = response.data;
-        localStorage.setItem('@InkManager:token', token);
-        ======================================================================
-      */
+      const payload = {
+        email: email.trim(),
+        password: password,
+        role: role
+      };
 
-      // Simulação de delay de rede para ficar profissional com o loading
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const response = await api.post('/Auth/login', payload);
+      
+      // Captura o token e as propriedades retornadas pela API corrigida em camelCase ou PascalCase
+      const token = response.data.token || response.data.Token;
+      const userId = response.data.userId || response.data.UserId;
+      
+      // SOLUÇÃO DE TOLERÂNCIA: Captura o clientId se o C# o retornar explicitamente no login
+      const clientId = response.data.clientId || response.data.ClientId || response.data.client?.id;
+      
+      // AJUSTE CRÍTICO: Captura a Role REAL retornada pelo C# (vinda do banco)
+      const backendRole = response.data.role || response.data.Role; 
+      
+      if (!token) {
+        throw new Error("A API autenticou, mas não retornou um Token JWT válido.");
+      }
 
-      // 1. Define o papel do usuário no estado global do React
-      login(role);
+      // Salva os dados de autenticação nas variáveis de persistência local
+      localStorage.setItem('@InkManager:token', token);
+      
+      if (userId) {
+        localStorage.setItem('userId', String(userId));
+      }
+      
+      // Se a API trouxe o ID do cliente separado, salva-o. Caso contrário, mantém o userId como fallback
+      if (clientId) {
+        localStorage.setItem('clientId', String(clientId));
+      } else if (userId) {
+        localStorage.setItem('clientId', String(userId));
+      }
 
-      // 2. Redireciona o usuário para o Dashboard correto com base na escolha
-      if (role === 'Artist') {
+      // Configura o token nas requisições do Axios imediatamente para evitar problemas de autenticação
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // 1. Define o papel REAL do usuário no estado global do React
+      login(backendRole);
+
+      // 2. Redireciona o usuário para o Dashboard correto baseado no retorno real da API
+      if (backendRole === 'Artist') {
         navigate('/artist/dashboard');
       } else {
         navigate('/client/catalog');
       }
 
     } catch (error) {
-      console.error(error);
-      alert(t('login.alert_error'));
+      console.error('Erro detalhado da requisição:', error);
+      
+      if (error.response) {
+        console.error('Dados de erro do C#:', JSON.stringify(error.response.data));
+        console.error('Status retornado do C#:', error.response.status);
+        
+        if (error.response.status === 401) {
+          alert('Credenciais incorretas ou usuário não cadastrado no banco do estúdio.');
+        } else {
+          alert(`Erro na API (${error.response.status}): ${JSON.stringify(error.response.data)}`);
+        }
+      } else if (error.request) {
+        alert('Sem resposta do servidor C#. Verifique se a API está rodando na porta 7053.');
+      } else {
+        alert('Erro ao configurar requisição de login.');
+      }
     } finally {
       setLoading(false);
     }
@@ -74,14 +113,15 @@ export default function Login() {
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)'
       }}>
         <h2 style={{ margin: 0, textAlign: 'center', color: '#fff', fontSize: '26px', fontWeight: 'bold' }}>
-          {t('login.title')}
+          {t('login.title', 'Entrar')}
         </h2>
         <p style={{ fontSize: '14px', color: '#aaa', textAlign: 'center', marginBottom: '10px' }}>
-          {t('login.welcome')}
+          {t('login.welcome', 'Seja bem-vindo ao InkManager')}
         </p>
 
+        {/* Campo E-mail */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.email')}</label>
+          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.email', 'E-mail')}</label>
           <input 
             type="email" 
             value={email} 
@@ -99,8 +139,9 @@ export default function Login() {
           />
         </div>
 
+        {/* Campo Senha */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.password')}</label>
+          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.password', 'Senha')}</label>
           <input 
             type="password" 
             value={password} 
@@ -118,8 +159,9 @@ export default function Login() {
           />
         </div>
 
+        {/* Tipo de Perfil */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.profile_type')}</label>
+          <label style={{ fontSize: '14px', color: '#ccc' }}>{t('login.profile_type', 'Tipo de Perfil')}</label>
           <select 
             value={role} 
             onChange={e => setRole(e.target.value)} 
@@ -133,11 +175,12 @@ export default function Login() {
               outline: 'none'
             }}
           >
-            <option value="Client">{t('login.role_client')}</option>
-            <option value="Artist">{t('login.role_artist')}</option>
+            <option value="Client">{t('login.role_client', 'Cliente')}</option>
+            <option value="Artist">{t('login.role_artist', 'Tatuador')}</option>
           </select>
         </div>
 
+        {/* Botão Entrar */}
         <button 
           type="submit" 
           disabled={loading}
@@ -158,12 +201,12 @@ export default function Login() {
           }}
         >
           <LogIn size={18} /> 
-          {loading ? '...' : t('login.button_login')}
+          {loading ? '...' : t('login.button_login', 'Entrar')}
         </button>
 
-        {/* LINK / BOTAO PARA TELA DE CADASTRO */}
+        {/* Redirecionamento para Registro */}
         <div style={{ textTransform: 'none', textAlign: 'center', marginTop: '10px', fontSize: '14px', color: '#aaa' }}>
-          {t('login.no_account')}{' '}
+          {t('login.no_account', 'Não tem uma conta?')}{' '}
           <span 
             onClick={() => navigate('/register')} 
             style={{ 
@@ -176,7 +219,7 @@ export default function Login() {
             onMouseEnter={(e) => e.target.style.color = '#a78bfa'}
             onMouseLeave={(e) => e.target.style.color = '#8b5cf6'}
           >
-            {t('login.button_register')}
+            {t('login.button_register', 'Cadastre-se')}
           </span>
         </div>
 

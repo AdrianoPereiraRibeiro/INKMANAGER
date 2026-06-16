@@ -1,52 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom'; 
-import { Users, Calendar, ArrowRight, User, Keyboard, Clock } from 'lucide-react';
+import { Users, Calendar, ArrowRight, User, Keyboard, Clock, LogOut } from 'lucide-react'; // Adicionado LogOut aqui
+// CORREÇÃO DO CAMINHO: Se o arquivo está em src/pages/client/Catalog.jsx, 
+// voltar duas pastas (../../) leva para a pasta src, onde está services/api.
+import api from '../../services/api'; 
+import { useAuth } from '../../context/AuthContext'; // IMPORTADO O SEU HOOK DE AUTENTICAÇÃO
 
 export default function Catalog() {
   const { t } = useTranslation();
   const navigate = useNavigate(); 
+  const { logout } = useAuth(); // Destruturando a função de logout do contexto
   const [artists, setArtists] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // CARGA DE DADOS DO BANCO (READ)
   useEffect(() => {
-    // Simulando os dados vindos do C# / SQL Server com o status ativo e os horários incluídos
-    const fakeArtists = [
-      { 
-        id: 1, 
-        name: 'Thiago Silva', 
-        specialty: 'Blackwork / Geométrico', 
-        bio: t('catalog.artist_1_bio'), 
-        isActive: true,
-        startWorkTime: '10:00',
-        endWorkTime: '19:00',
-        workDays: 'tues_to_sat'
-      },
-      { 
-        id: 2, 
-        name: 'Marina Fontes', 
-        specialty: 'Realismo / Colorido', 
-        bio: t('catalog.artist_2_bio'), 
-        isActive: true,
-        startWorkTime: '09:00',
-        endWorkTime: '18:00',
-        workDays: 'mon_to_fri'
-      },
-      { 
-        id: 3, 
-        name: 'Carlos "Old" Neto', 
-        specialty: 'Traditional / Old School', 
-        bio: t('catalog.artist_3_bio'), 
-        isActive: false, // Inativo: Não vai aparecer na tela do cliente
-        startWorkTime: '09:00',
-        endWorkTime: '17:00',
-        workDays: 'mon_to_fri'
-      }
-    ];
+    const fetchActiveArtists = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('TattooArtist');
+        
+        const data = response.data || [];
 
-    // FILTRO: Garante que apenas os profissionais com 'isActive: true' fiquem visíveis
-    const activeArtists = fakeArtists.filter(artist => artist.isActive === true);
-    setArtists(activeArtists);
+        const activeArtists = data.filter(
+          artist => artist.isActive === true || artist.isActive === 'true' || artist.isActive === null || artist.isActive === undefined
+        );
+
+        const formattedArtists = activeArtists.map(artist => ({
+          id: artist.id,
+          name: artist.name || artist.fullName || artist.user?.name || t('catalog.default_artist_name', 'Tatuador Profissional'),
+          specialty: artist.specialty || artist.style || 'Tatuador Geral',
+          bio: artist.bio || t('catalog.no_bio_available', 'Disponível para criações personalizadas.'),
+          isActive: artist.isActive,
+          startWorkTime: artist.startWorkTime ? artist.startWorkTime.substring(0, 5) : '09:00',
+          endWorkTime: artist.endWorkTime ? artist.endWorkTime.substring(0, 5) : '18:00',
+          workDays: artist.workDays || 'mon_to_fri' 
+        }));
+
+        setArtists(formattedArtists);
+      } catch (error) {
+        console.error("Erro ao buscar a lista de tatuadores da API:", error);
+        setArtists([]); 
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActiveArtists();
   }, [t]);
+
+  // Função disparada ao clicar em Sair
+  const handleSystemLogout = () => {
+    if (window.confirm(t('catalog.confirm_logout', 'Deseja realmente sair do sistema?'))) {
+      logout(); // Limpa as variáveis de sessão e estados globais
+      navigate('/login'); // Redireciona para a tela de login
+    }
+  };
+
+  // Escuta manual do atalho global Alt + L para o cliente deslogar também
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        handleSystemLogout();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSelectArtist = (artistId) => {
     navigate(`/client/schedule/${artistId}`);
@@ -60,8 +82,8 @@ export default function Catalog() {
         {/* Cabeçalho */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '15px' }}>
           <div>
-            <h1 style={{ margin: '0 0 10px 0', fontSize: '32px', fontWeight: 'bold' }}>{t('catalog.title')}</h1>
-            <p style={{ margin: 0, color: '#aaa' }}>{t('catalog.subtitle')}</p>
+            <h1 style={{ margin: '0 0 10px 0', fontSize: '32px', fontWeight: 'bold' }}>{t('catalog.title', 'Catálogo de Tatuadores')}</h1>
+            <p style={{ margin: 0, color: '#aaa' }}>{t('catalog.subtitle', 'Encontre o profissional perfeito para a sua próxima ideia e faça seu agendamento.')}</p>
           </div>
           
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -71,7 +93,7 @@ export default function Catalog() {
               onMouseEnter={(e) => e.target.style.backgroundColor = '#3a3a3a'}
               onMouseLeave={(e) => e.target.style.backgroundColor = '#2a2a2a'}
             >
-              <User size={16} color="#8b5cf6" /> {t('catalog.btn_profile')}
+              <User size={16} color="#8b5cf6" /> {t('catalog.btn_profile', 'Meu Perfil')}
             </button>
 
             <button 
@@ -80,19 +102,33 @@ export default function Catalog() {
               onMouseEnter={(e) => e.target.style.backgroundColor = '#a78bfa'}
               onMouseLeave={(e) => e.target.style.backgroundColor = '#8b5cf6'}
             >
-              {t('catalog.btn_my_appointments')} <ArrowRight size={16} />
+              {t('catalog.btn_my_appointments', 'Meus Agendamentos')} <ArrowRight size={16} />
+            </button>
+
+            {/* BOTÃO DE LOGOUT DO CLIENTE ADICIONADO AQUI */}
+            <button 
+              onClick={handleSystemLogout}
+              style={{ padding: '12px 20px', backgroundColor: '#1a1a1a', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1a1a1a'}
+            >
+              <LogOut size={16} /> {t('catalog.btn_logout', 'Sair')}
             </button>
           </div>
         </div>
 
-        {/* Estado Vazio */}
-        {artists.length === 0 ? (
+        {/* Estado de Carregamento ou Vazio */}
+        {loading ? (
+          <p style={{ textAlign: 'center', color: '#aaa', padding: '40px' }}>Carregando catálogo de profissionais...</p>
+        ) : artists.length === 0 ? (
           <div style={{ padding: '60px 20px', textAlign: 'center', backgroundColor: '#1e1e1e', borderRadius: '8px', border: '1px dashed #444', margin: '20px 0' }}>
             <Users size={40} color="#666" style={{ marginBottom: '15px' }} />
-            <p style={{ color: '#aaa', fontSize: '16px', margin: 0 }}>{t('catalog.empty_state')}</p>
+            <p style={{ color: '#aaa', fontSize: '16px', margin: 0 }}>
+              {t('catalog.empty_state', 'Nenhum tatuador disponível no momento no banco de dados.')}
+            </p>
           </div>
         ) : (
-          /* Grid dos Cards dos Tatuadores Ativos */
+          /* Grid dos Cards dos Tatuadores Ativos vindos do Banco */
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px' }}>
             {artists.map((artist) => (
               <div key={artist.id} style={{ backgroundColor: '#1e1e1e', borderRadius: '8px', padding: '25px', border: '1px solid #333', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '20px' }}>
@@ -104,13 +140,13 @@ export default function Catalog() {
                     <div>
                       <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>{artist.name}</h3>
                       <span style={{ fontSize: '13px', color: '#8b5cf6', fontWeight: '600', display: 'block', marginBottom: '4px' }}>
-                        {t('catalog.specialty_label')}: {artist.specialty}
+                        {t('catalog.specialty_label', 'Especialidade')}: {artist.specialty}
                       </span>
                       
-                      {/* Horário de Trabalho Internacionalizado */}
+                      {/* Horário de Trabalho */}
                       <span style={{ fontSize: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}>
                         <Clock size={13} /> 
-                        {t(`catalog.days.${artist.workDays}`)} ({t('catalog.hours_template', { start: artist.startWorkTime, end: artist.endWorkTime })})
+                        {artist.workDays === 'mon_to_fri' ? 'Segunda a Sexta' : artist.workDays} ({artist.startWorkTime} - {artist.endWorkTime})
                       </span>
                     </div>
                   </div>
@@ -121,7 +157,7 @@ export default function Catalog() {
                   onClick={() => handleSelectArtist(artist.id)}
                   style={{ width: '100%', padding: '12px', backgroundColor: '#8b5cf6', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.2s' }}
                 >
-                  <Calendar size={16} /> {t('catalog.btn_schedule')}
+                  <Calendar size={16} /> {t('catalog.btn_schedule', 'Agendar Sessão')}
                 </button>
               </div>
             ))}
@@ -133,7 +169,7 @@ export default function Catalog() {
       <div style={{ maxWidth: '1000px', margin: '60px auto 0 auto', width: '100%', borderTop: '1px solid #333', paddingTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: '#666', fontSize: '13px' }}>
         <Keyboard size={16} color="#444" />
         <span>
-          <strong>{t('catalog.shortcuts_title')}:</strong> <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + P</kbd> {t('catalog.shortcut_profile')} | <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + A</kbd> {t('catalog.shortcut_appointments')} | <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + L</kbd> {t('catalog.shortcut_logout')}
+          <strong>Atalhos:</strong> <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + P</kbd> Perfil | <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + A</kbd> Agendamentos | <kbd style={{ background: '#222', padding: '3px 6px', borderRadius: '4px', border: '1px solid #444', color: '#aaa', fontFamily: 'monospace' }}>Alt + L</kbd> <span onClick={handleSystemLogout} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Sair</span>
         </span>
       </div>
 

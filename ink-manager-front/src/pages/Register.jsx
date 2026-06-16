@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Importando o contexto de autenticação
 import { User, Mail, Lock, Users, ArrowLeft } from 'lucide-react';
-import api from '../services/api'; // Ajuste o caminho se necessário
+import api from '../services/api'; // Conexão com o C# configurada no Axios (Porta 7053)
 
 export default function Register() {
   const { t } = useTranslation();
@@ -18,6 +18,8 @@ export default function Register() {
     role: 'Client' // Valor padrão
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -26,25 +28,29 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validação simples
+    // Validação simples de preenchimento
     if (!formData.name || !formData.email || !formData.password) {
-      alert(t('register.alert_validation'));
+      alert(t('register.alert_validation') || 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
     try {
-      // PRONTO PARA O C#: Quando a API estiver ativa, descomente as linhas abaixo
-      /*
-      const response = await api.post('/auth/register', formData);
-      // Se a sua API já devolver o token direto no cadastro, salve-o aqui:
-      // const { token } = response.data;
-      // localStorage.setItem('@InkManager:token', token);
-      */
+      setLoading(true);
 
-      alert(t('register.alert_success'));
+      // REQUISIÇÃO REAL PARA O BACK-END C# / SQL SERVER
+      const response = await api.post('/Auth/register', formData);
       
-      // Salva uma simulação no localStorage apenas para histórico visual
-      localStorage.setItem('registeredUser', JSON.stringify(formData));
+      // Captura o token e id do usuário se fornecidos no cadastro, ou faz fallback se necessário
+      const { token, userId } = response.data;
+
+      if (token) {
+        localStorage.setItem('@InkManager:token', token);
+      }
+      if (userId) {
+        localStorage.setItem('userId', String(userId));
+      }
+
+      alert(t('register.alert_success') || 'Cadastro realizado com sucesso!');
 
       // 1. Efetua o login automático no estado global usando o perfil (role) escolhido
       login(formData.role);
@@ -57,8 +63,14 @@ export default function Register() {
       }
 
     } catch (error) {
-      console.error('Erro ao cadastrar:', error);
-      alert(t('register.alert_error'));
+      console.error('Erro ao cadastrar no banco de dados:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(error.response.data.message);
+      } else {
+        alert(t('register.alert_error') || 'Erro ao realizar o cadastro. Tente novamente.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -93,6 +105,7 @@ export default function Register() {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              disabled={loading}
               placeholder={t('register.placeholder_name')}
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
@@ -108,6 +121,7 @@ export default function Register() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              disabled={loading}
               placeholder="email@email.com"
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
@@ -123,6 +137,7 @@ export default function Register() {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              disabled={loading}
               placeholder="••••••••"
               style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
@@ -137,7 +152,8 @@ export default function Register() {
               name="role"
               value={formData.role}
               onChange={handleChange}
-              style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none', cursor: 'pointer' }}
+              disabled={loading}
+              style={{ padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', borderRadius: '6px', color: '#fff', fontSize: '15px', outline: 'none', cursor: loading ? 'not-allowed' : 'pointer' }}
             >
               <option value="Client">{t('register.role_client')}</option>
               <option value="Artist">{t('register.role_artist')}</option>
@@ -147,9 +163,21 @@ export default function Register() {
           {/* Botão de Submeter */}
           <button 
             type="submit"
-            style={{ marginTop: '10px', padding: '14px', backgroundColor: '#8b5cf6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', transition: 'background 0.2s' }}
+            disabled={loading}
+            style={{ 
+              marginTop: '10px', 
+              padding: '14px', 
+              backgroundColor: loading ? '#5b21b6' : '#8b5cf6', 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: loading ? 'not-allowed' : 'pointer', 
+              fontWeight: 'bold', 
+              fontSize: '16px', 
+              transition: 'background 0.2s' 
+            }}
           >
-            {t('register.btn_submit')}
+            {loading ? '...' : t('register.btn_submit')}
           </button>
 
         </form>
