@@ -23,46 +23,88 @@ O **InkManager** é uma plataforma web que conecta clientes a tatuadores, permit
 ## 🗂️ Estrutura do Projeto
 INKMANAGER/
 
+INKMANAGER/
+
 ├── InkManagerAPI/               # API em C# (.NET)
+
 │   ├── Controllers/
+
 │   │   ├── AppointmentController.cs
+
 │   │   ├── ArtistController.cs
+
 │   │   ├── AuthController.cs
+
 │   │   └── DashboardController.cs
+
 │   ├── Data/                    # Contexto do Entity Framework
+
 │   ├── Migrations/              # Migrations do banco de dados
+
 │   ├── Models/
+
 │   │   ├── Appointment.cs       # Entidade de Agendamento
+
 │   │   ├── TattoArtist.cs       # Entidade de Tatuador
+
 │   │   ├── User.cs              # Entidade de Usuário
+
 │   │   └── Enums.cs             # Enumerações do sistema
+
 │   ├── Services/                # Regras de negócio
+
 │   ├── Program.cs
+
 │   └── appsettings.json
+
 │
+
 └── ink-manager-front/           # Aplicação React
+
 ├── public/
+
 └── src/
+
 ├── context/             # Contextos globais (autenticação)
+
 ├── hooks/               # Custom hooks
+
 ├── i18n/
+
 │   ├── index.js
+
 │   └── locales/
+
 │       ├── en.json      # Inglês
+
 │       └── pt.json      # Português
+
 ├── pages/
+
 │   ├── artist/
+
 │   │   ├── ArtistProfile.jsx
+
 │   │   └── Dashboard.jsx
+
 │   ├── client/
+
 │   │   ├── AppointmentForm.jsx
+
 │   │   ├── Catalog.jsx
+
 │   │   ├── MyAppointments.jsx
+
 │   │   └── Profile.jsx
+
 │   ├── Login.jsx
+
 │   └── Register.jsx
+
 ├── services/            # Comunicação com a API
+
 ├── App.jsx
+
 └── main.jsx
 ---
 
