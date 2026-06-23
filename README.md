@@ -110,7 +110,6 @@ npm run dev
 - [ ] Chat interno entre cliente e tatuador
 - [ ] Painel administrativo geral da plataforma
 - [ ] Relatórios financeiros em PDF para o tatuador
-- [ ] Internacionalização (EN / ES além do PT-BR)
 - [ ] Integração com pagamento online
 - [ ] Calendário visual de agendamentos para o artista
 
