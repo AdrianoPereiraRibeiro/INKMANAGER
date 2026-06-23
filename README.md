@@ -7,6 +7,12 @@
 O **InkManager** é uma plataforma web que conecta clientes a tatuadores, permitindo o gerenciamento completo de agendamentos, perfis profissionais e acompanhamento de sessões. O sistema possui dois tipos de perfil: **Cliente** e **Tatuador (Artista)**, cada um com funcionalidades específicas.
 
 ---
+## 🌿 Branches do Repositório
+
+| Branch | Conteúdo |
+|--------|----------|
+| `FrontEnd` | Aplicação React + Vite (interface do usuário) |
+| `BackEnd` | API em C# .NET + Entity Framework + SQL Server |
 
 ## 🛠️ Tecnologias Utilizadas
 
