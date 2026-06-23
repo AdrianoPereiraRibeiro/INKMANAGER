@@ -12,9 +12,55 @@ O **InkManager** é uma plataforma web que conecta clientes a tatuadores, permit
 
 | Camada | Tecnologia |
 |--------|------------|
-| Front-end | React |
-| Back-end | C# (.NET) |
+| Front-end | React + Vite |
+| Back-end | C# (.NET) — ASP.NET Core Web API |
 | Banco de Dados | SQL Server |
+| ORM | Entity Framework Core (Code First + Migrations) |
+| Internacionalização | i18n (PT-BR, EN, ES) |
+
+---
+
+## 🗂️ Estrutura do Projeto
+
+INKMANAGER/
+
+├── backend/                  # API em C# (.NET)
+
+│   ├── Controllers/          # Endpoints da API REST
+
+│   ├── Data/                 # Contexto do Entity Framework
+
+│   ├── Migrations/           # Migrations do banco de dados
+
+│   ├── Models/               # Entidades do sistema
+
+│   ├── Services/             # Regras de negócio
+
+│   ├── Program.cs
+
+│   └── appsettings.json
+
+│
+
+└── frontend/                 # Aplicação React
+
+├── public/
+
+└── src/
+
+├── context/          # Contextos globais (autenticação, etc.)
+
+├── hooks/            # Custom hooks
+
+├── i18n/             # Arquivos de internacionalização
+
+├── pages/            # Telas da aplicação
+
+├── services/         # Comunicação com a API
+
+├── App.jsx
+
+└── main.jsx
 
 ---
 
@@ -29,13 +75,13 @@ O **InkManager** é uma plataforma web que conecta clientes a tatuadores, permit
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/inkmanager.git
-cd inkmanager
+git clone https://github.com/AdrianoPereiraRibeiro/INKMANAGER.git
+cd INKMANAGER
 ```
 
 ### 2. Configurar o Banco de Dados
 
-Atualize a connection string no arquivo `appsettings.json` do back-end:
+Atualize a connection string no arquivo `backend/appsettings.json`:
 
 ```json
 "ConnectionStrings": {
@@ -43,7 +89,7 @@ Atualize a connection string no arquivo `appsettings.json` do back-end:
 }
 ```
 
-Execute as migrations:
+Execute as migrations para criar as tabelas:
 
 ```bash
 cd backend
@@ -57,6 +103,8 @@ cd backend
 dotnet run
 ```
 
+A API estará disponível em: `http://localhost:5000`
+
 ### 4. Executar o Front-end
 
 ```bash
@@ -65,39 +113,48 @@ npm install
 npm run dev
 ```
 
+O front-end estará disponível em: `http://localhost:5173`
+
 ---
 
 ## ✅ Funcionalidades Implementadas
 
 ### Autenticação
-- Cadastro de usuários (Cliente e Tatuador)
-- Login com seleção de tipo de perfil
+- Cadastro de usuários com seleção de tipo de perfil (Cliente ou Tatuador)
+- Login com e-mail, senha e tipo de perfil
 - Logout
 
 ### Perfil do Cliente
-- Visualização e edição de nome e e-mail
-- Alteração de senha
+- Visualização e edição de nome completo e e-mail
+- Alteração de senha com confirmação
 
 ### Catálogo de Tatuadores
-- Listagem pública de tatuadores disponíveis
-- Exibição de especialidade, horários e biografia de cada profissional
+- Listagem pública de tatuadores com agenda disponível
+- Exibição de especialidade, horários de atendimento e biografia
 
 ### Agendamento (Cliente)
-- Solicitação de agendamento com data, horário, estilo, tamanho, local do corpo e descrição da ideia
-- Acompanhamento do status dos agendamentos (Em Análise / Confirmado)
-- Download de instruções pós-tattoo em PDF
+- Solicitação de agendamento com: data, horário, estilo da tatuagem, tamanho estimado, local do corpo e descrição da ideia
+- Acompanhamento do status dos pedidos (Em Análise / Confirmado)
+- Download de instruções pós-tattoo em PDF para agendamentos confirmados
 
-### Painel do Artista
+### Painel do Artista (Tatuador)
 - Dashboard com total de sessões e faturamento estimado
-- Gráfico de evolução mensal de atendimentos
-- Listagem e análise de solicitações recentes
-- Aceitar ou recusar pedidos com definição de orçamento
+- Gráfico de evolução mensal de atendimentos por ano
+- Listagem de solicitações de agendamento recentes
+- Análise detalhada de cada pedido (estilo, tamanho, local, descrição)
+- Aceitar agendamento com definição de valor do orçamento
+- Recusar pedidos de agendamento
 
 ### Perfil Profissional (Tatuador)
-- Edição de nome, e-mail, especialidades e biografia
-- Configuração de horários e dias de atendimento
-- Status da agenda (disponível / indisponível)
-- Alteração de senha
+- Edição de nome profissional, e-mail de contato, especialidades e biografia
+- Configuração de horário de abertura, fechamento e dias de atendimento
+- Ativação/desativação da agenda (disponível para novos agendamentos)
+- Alteração de senha com confirmação
+
+### Internacionalização
+- Sistema preparado para múltiplos idiomas via i18n
+- Suporte a Português (PT-BR), Inglês (EN) e Espanhol (ES)
+- Idioma detectado automaticamente conforme configuração do sistema do usuário
 
 ---
 
@@ -106,7 +163,7 @@ npm run dev
 - [ ] Upload de fotos de portfólio pelo tatuador
 - [ ] Sistema de avaliações e comentários por clientes
 - [ ] Notificações por e-mail ao confirmar/recusar agendamento
-- [ ] Filtros de busca no catálogo (estilo, disponibilidade)
+- [ ] Filtros de busca no catálogo (por estilo, disponibilidade, localidade)
 - [ ] Chat interno entre cliente e tatuador
 - [ ] Painel administrativo geral da plataforma
 - [ ] Relatórios financeiros em PDF para o tatuador
@@ -119,8 +176,8 @@ npm run dev
 
 | Nome | Função |
 |------|--------|
-| Adrino Pereira Ribeiro| Back-end / Banco de Dados / Documentação |
-| Cesar Alencar Machado Cardoso Junior | Front-end / Documentação |
+| Adriano Pereira Ribeiro | Front-end / Back-end |
+| [Nome do outro integrante] | Back-end / Banco de Dados |
 
 ---
 
